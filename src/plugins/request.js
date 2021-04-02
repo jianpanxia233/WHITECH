@@ -8,7 +8,7 @@ axios.defaults.crossDomain = true;
 
 axios.interceptors.request.use(
   config => {
-    const token = Cookies.get(process.env.VUE_APP_COOKIE_KEY);
+    const token = Cookies.get(process.env.VUE_APP_COOKIE_KEY)||'undefined';
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -18,22 +18,18 @@ axios.interceptors.request.use(
 );
 
 axios.interceptors.response.use(
-  // response => {
-  //   if (response.data.code) {
-  //     return response.data.code === 'A00000'
-  //       ? Promise.resolve(response.data.result)
-  //       : Promise.reject(response);
-  //   }
-  //   return Promise.resolve(response.data);
-  // },
-  // error => {
-  //   if (error.response.status === 401 || error.response.status === 403) {
-  //     Cookies.remove(process.env.VUE_APP_COOKIE_KEY);
-  //     window.location.href = process.env.VUE_APP_PUBLIC_PATH || '/';
-  //   }
-  //   return Promise.reject(error.response);
-  // }
-);
+  response => {
+    if(response.data.code===0) {
+      return response.data.code == 0
+       ? Promise.resolve(response.data.data)
+       : Promise.reject(response)
+    }
+    return Promise.resolve(response.data);
+  },
+  error => {
+    return Promise.reject(error.response);
+  }
+)
 
 Vue.prototype.$http = axios;
 

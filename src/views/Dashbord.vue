@@ -10,6 +10,10 @@
                     <i class="el-icon-zoom-in"></i>
                     <span slot="title">关注/粉丝</span>
                 </el-menu-item>
+                <el-menu-item index="/dashbord/payment">
+                    <i class="el-icon-menu"></i>
+                    <span slot="title">充值支付</span>
+                </el-menu-item>
                 <el-menu-item index="/dashbord/password">
                     <i class="el-icon-setting"></i>
                     <span slot="title">修改密码</span>

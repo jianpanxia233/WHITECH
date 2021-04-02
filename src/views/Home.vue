@@ -169,13 +169,18 @@ export default {
                 padding: 0 30px;
             }
             div{
+                display: flex;
                 width: 100%;
                 height: auto;
-                text-align: center;
+                justify-content: center;
             }
-            img {
+            .img {
                 width: 150px;
-                height: 150px
+                height: 150px;
+                img {
+                    width: 100%;
+                    height: 100%;
+                }
             }
         }
         .el-footer {

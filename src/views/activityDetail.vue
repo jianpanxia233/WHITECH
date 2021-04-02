@@ -49,7 +49,7 @@
                     </el-col>
                     <el-col :span="1">
                         <div class="grid-content bg-purple-dark">
-                            <el-button>加入</el-button>
+                            <el-button @click="entermeeting">加入</el-button>
                         </div>
                     </el-col>
                 </el-row>
@@ -86,6 +86,10 @@ export default {
         }
     },
     methods: {
+
+    },
+    mounted(){
+        let activityId = this.$route.query.activityId;
 
     }
 }

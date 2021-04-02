@@ -1,6 +1,6 @@
 <template>
   <el-container>
-    <el-aside width="40%" min-width="40%">
+    <el-aside width="30%" min-width="40%">
       <div class="side-box">
         <div class="header">
           <p class="title">消息中心<span @click="markdown">全部标记已读</span></p>
@@ -33,6 +33,9 @@
                 <div class="name">{{ item.name }}</div>
                 <div class="message">{{ item.message }}</div>
               </div>
+              <div class="tips" v-show="item.unread">
+                <span>{{item.unread}}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -54,7 +57,42 @@
         <div class="title">
           <span>和{{ talker }}的对话</span>
         </div>
-        <div class="content"></div>
+        <div class="content">
+          <div class="message-wrapper">
+            <div
+                class="message-item"
+                v-for="(msg,index) in messageHistory"
+                :key="index"
+                :class="[msg.messageDirection == 1 ? 'my-msg' : 'your-msg']"
+            >
+                <div v-if="msg.messageType == 'RC:TxtMsg'" class="message-text">
+                    <div class="rong-avatar">
+                        <!-- <img
+                            v-if="msg.messageDirection == 1"
+                            :src="currentUserInfo.portraitUri"
+                            class="rong-avatar-bd"
+                        >
+                        <img
+                            v-else
+                            :src="targetUserInfo.portraitUri"
+                            class="rong-avatar-bd"
+                        > -->
+                    </div>
+                    <div class="message-body">
+                        <pre
+                            class="user-msg"
+                        >{{msg.content.content}}</pre>
+                        <img
+                            class="image-message"
+                            :src="msg.content.imageUri"
+                            alt="image"
+                            v-if="msg.content.messageName == 'ImageMessage'"
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
         <div class="message">
           <div class="message-box">
             <el-input
@@ -75,23 +113,27 @@
 </template>
 <script>
 import debounce from "@/plugins/utils";
-import object from "@/plugins/im";
+import { init } from "@/plugins/im";
 import * as RongIMLib from "@rongcloud/imlib-v4";
 import getDate from "@/plugins/time.js"
+import Cookies from 'js-cookie';
 export default {
   data() {
     return {
+      messageHistory: [],
       searchname: "",
       contacts: [
         {
           name: "小明",
           message: "你好",
           portraitUri: require(`@/assets/persons/talk1.png`),
+          unread: 1
         },
         {
           name: "小刚",
           message: "你好",
           portraitUri: require(`@/assets/persons/talk2.jpg`),
+          unread: 0
         },
       ],
       system: true,
@@ -106,11 +148,15 @@ export default {
         },
       ],
       talker: "",
-      textarea: ""
+      textarea: "",
+      im: {}
     };
   },
   computed: {
         
+  },
+  mounted() {
+    this.chatInit();
   },
   methods: {
     debounceInput() {
@@ -119,24 +165,26 @@ export default {
       }, 1000);
     },
     tomessagebox(name) {
-      this.system = false;
-      this.talker = name;
-      var conversation = object.im.Conversation.get({
+      this.talker = '1373999894674587650';
+      var conversation = this.im.Conversation.get({
         targetId: this.talker,
         type: RongIMLib.CONVERSATION_TYPE.PRIVATE
-    });
-    var option = {
-    timestamp: +new Date(),
-    count: 20
-    };
+      });
+      var option = {
+      timestamp: +new Date(),
+      count: 20
+      };
+    let that = this
     conversation.getMessages(option).then(function(result){
     var list = result.list; // 历史消息列表
     var hasMore = result.hasMore; // 是否还有历史消息可以获取
+    that.messageHistory = list
+    that.system = false;
     console.log('获取历史消息成功', list, hasMore);
     });
     },
     sendMessage() {
-        var conversation = object.im.Conversation.get({
+        var conversation = this.im.Conversation.get({
         // targetId
         targetId: this.talker,
         // 会话类型：RongIMLib.CONVERSATION_TYPE.PRIVATE | RongIMLib.CONVERSATION_TYPE.GROUP
@@ -164,18 +212,35 @@ export default {
       this.getmessage()
     },
     markdown() {
-        this.chatInit()
+        console.log('标记已读')
     },
     chatInit() {
-        object.im.disconnect().then(() => console.log('断开链接成功'))
-        object.im.connect({
-        token:
-            "RgPWcHHx7DEyDOuctYJiuCZYvDKFaLFzKZEHGzL7ghRi/uYNHd6uK9FhJLmfM/+N@aes0.cn.rongnav.com;aes0.cn.rongcfg.com",
+        var callbacks = {
+            CONNECTED: function(conversation) {
+              console.log('触发回调')
+              this.setMessageList() 
+            },
+            Received: function(message) {
+              let conversation = this.im.Conversation.get({
+                  targetId: this.talker,
+                  type: RongIMLib.CONVERSATION_TYPE.PRIVATE
+              });
+
+              conversation.getUnreadCount().then(function(count) {
+                  console.log('获取指定会话未读数成功', count);
+                  this.contacts[0].unread = count
+              })
+            }
+        };
+        this.im = init(callbacks)
+        this.im.disconnect().then(() => console.log('断开链接成功'))
+        this.im.connect({
+          token:Cookies.get('IM_TOKEN'),
         })
         .then((user) => {
         console.log("链接成功, 链接用户 id 为: ", user.id);
         this.setMessageList()
-    });
+    }).catch(err => console.log(err));
     // getChatList() {
     // //    object.conversationList.forEach( (el,index) => {
     // //        this.contacts[index].message = el.content.content
@@ -185,12 +250,13 @@ export default {
     // }
     },
     setMessageList(){
-        object.im.Conversation.getList().then(list => {
+        this.im.Conversation.getList().then(list => {
         localStorage.setItem("resultList", JSON.stringify(list));
         console.log('获取会话列表成功', list);
-    }).catch(error => {
-        console.log('获取会话列表失败: ', error.code, error.msg);
-    });   
+        this.getmessage()
+        }).catch(error => {
+            console.log('获取会话列表失败: ', error.code, error.msg);
+        });   
     },
     getmessage(){
         let result = JSON.parse(localStorage.getItem('resultList'))
@@ -200,10 +266,7 @@ export default {
         this.contacts[index].time = getDate(el.latestMessage.sentTime,'yyyy/mm/dd')
         })
     },
-  mounted() {
-        
   },
-}
 }
 </script>
 <style lang="scss" scoped>
@@ -214,7 +277,7 @@ export default {
 .el-aside {
   padding: 20px 15px 20px 80px;
   .side-box {
-    width: 100%;
+    width: 310px;
     height: 95%;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 3%;
@@ -280,6 +343,19 @@ export default {
             font-size: 12px;
             color: $color-primary;
           }
+          .tips {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: red;
+            span {
+              color: #fff;
+              font-size: 13px;
+            }
+          }
         }
         .list-item:hover {
           cursor: pointer;
@@ -291,7 +367,7 @@ export default {
 }
 .el-main {
   .system {
-    height: 95%;
+    height: 580px;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 3%;
     background: rgb(247, 243, 243);
@@ -321,7 +397,94 @@ export default {
       border-radius: 4px 4px 0 0;
     }
     .content {
-      flex: 1;
+      overflow-y: scroll;
+      height: 500px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 0 0.5rem;
+      .message-wrapper {
+          padding: 0 0.5rem;
+      }
+      .message-item:nth-child(n+1) {
+          margin-top: 10px;
+      }  
+
+      .message-item:last-child {
+          margin-bottom: 10px;
+      }
+
+      .message-text {
+          display: flex;
+          font-size: 12px;
+      }
+
+      .my-msg .message-text {
+          flex-direction: row-reverse;
+      }
+
+      .you-msg .message-text {
+          padding-left: 1.39rem;
+      }
+
+      .message-text .rong-avatar {
+          flex-shrink: 0;
+          width: 35px;
+          height: 35px;
+          border-radius: 25px;
+          overflow: hidden;
+      }
+
+      .message-text .rong-avatar img {
+          width: 100%;
+      }
+
+      .message-text .message-body {
+          position: relative;
+          color: #353535;
+          padding: 7px;
+          max-width: 100%;
+          min-height: 24px;
+          display: inline-block;
+          vertical-align: top;
+          text-align: left;
+          border-radius: 3px;
+          -moz-border-radius: 3px;
+          -webkit-border-radius: 3px;
+      }
+
+      .message-text .message-body pre {
+          white-space: normal;
+          font-family: "Microsoft yahei";
+      }
+      .my-msg .message-text .message-body {
+          margin-right: 10px;
+          background:#68b9f0;
+      }
+
+      .my-msg .message-text .message-body:after {
+          position: absolute;
+          top: 8px;
+          right: -14px;
+          border: 5px solid transparent;
+          content: " ";
+          border-left-color: #68b9f0;
+          border-left-width: 10px;
+      }
+
+      .your-msg .message-text .message-body {
+          margin-left: 0.25rem;
+          background: #fff;
+      }
+
+      .your-msg .message-text .message-body:before {
+          position: absolute;
+          top: 0.32rem;
+          left: -0.3rem;
+          border: 0.2rem solid transparent;
+          content: " ";
+          border-right-color: #fff;
+          border-right-width: 0.15rem;
+
+      }
     }
     .message {
       padding: 15px;

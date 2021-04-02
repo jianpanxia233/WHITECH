@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header class="we-header" v-show="$route.name!=='login'">
+    <header class="we-header" v-show="$route.name!=='login'&&$route.name!=='meetingroom'">
         <div class="we-header-content">
             <div class="we-header-main">
                 <div class="we-header-title">WHITECH</div>
@@ -43,10 +43,24 @@
   </div>
 </template>
 <script>
+import Cookies from 'js-cookie';
 export default {
+    watch: {
+      $route(to) {
+        if(to.name != 'login'){
+          let token = Cookies.get(process.env.VUE_APP_COOKIE_KEY)
+          if(token=='undefined'){ 
+              this.token = null
+          }
+          else{
+            this.token = token
+          }
+        }
+      }
+    },
     data() {
       return {
-        token: 'vbjdkabvlavn'
+        token: undefined
       }
     },
     methods: {
@@ -54,7 +68,11 @@ export default {
         this.$router.push(`/login`)
       },
       handleCommand(command){
-        if(command== 'logout') this.token = null
+        if(command== 'logout') {
+          this.token = null
+          Cookies.set(process.env.VUE_APP_COOKIE_KEY,'undefined')
+          this.$router.push('/home')
+        }
       }
     }
 }

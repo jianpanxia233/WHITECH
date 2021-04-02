@@ -1,4 +1,1 @@
-import AgoraRTC from "agora-rtc-sdk-ng"
-const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-
-export default client
+export const AGORA_APP_ID = '7c62d55b173740488d2da460cf9081a0'

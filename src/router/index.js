@@ -1,5 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
+import {AuthGuard} from './guards'
 Vue.use(VueRouter);
 const routes = [
     {
@@ -44,6 +45,11 @@ const routes = [
         component: () => import('../views/activityDetail.vue')
     },
     {
+        path: '/meetingroom',
+        name: 'meetingroom',
+        component: () => import('../views/meetingroom.vue')
+    },
+    {
         path: '/dashbord',
         name: 'dashbord',
         component: () => import('../views/Dashbord.vue'),
@@ -59,6 +65,11 @@ const routes = [
               component: () => import('../views/admin/follow.vue')
             },
             {
+                path: 'payment',
+                name: 'payment',
+                component: () => import('../views/admin/pay.vue')
+            },
+            {
               path: 'password',
               name: 'password',
               component: () => import('../views/admin/password.vue')
@@ -68,7 +79,15 @@ const routes = [
 ]
 const router = new VueRouter({
     mode: 'history',
+    base: process.env.VUE_APP_PUBLIC_PATH || '/',
     routes,
+});
+router.beforeEach(AuthGuard)
+router.beforeEach((to,from,next) => {
+    if(to.path=='/login') {
+        localStorage.setItem('preRoute',router.currentRoute.fullPath)
+    }
+    next()
 });
 
 export default router;
