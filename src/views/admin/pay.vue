@@ -56,7 +56,7 @@ export default {
         margin-bottom: 40px;
         border-radius: 40px 40px 40px 40px ;
         padding: 30px;
-        border: 1px solid $color-primary;
+        border: 1px solid #1f6fff;
         .title {
             .main-title {
                 font-size: 30px;

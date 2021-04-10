@@ -7,7 +7,7 @@ import App from './App.vue'
 import '@/assets/fonts/css/icons.css'
 
 Vue.config.productionTip = false
-
+Vue.prototype.$EventBus = new Vue()
 new Vue({
   router,
   store,

@@ -8,7 +8,7 @@
                 <div class="itembox"
                  v-for="(item,index) in activities"
                  :key="index"
-                 @click="gotoDetail(item.index)">
+                 @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -40,7 +40,7 @@
                 <div class="itembox" 
                 v-for="(item,index) in activities" 
                 :key="index"
-                @click="gotoDetail(item.index)">
+                @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -165,7 +165,34 @@ export default {
             loadstate: false
         }
     },
+    mounted(){
+        this.queryActicities()
+    },
     methods: {
+        queryActicities(){
+            this.$http.get(`/user/activity/page?current=1&size=10&status=1`)
+            .then(result => {
+                let activities = result.records
+                let result2 = []
+                activities.forEach( item => {
+                    let obj = {}
+                    obj.id = item.activityId
+                    obj.name = item.title
+                    obj.img = item.cover
+                    obj.time = `${item.startTime}---${item.startTime}`
+                    obj.speakers = item.activitySpeakers.map(item => {
+                        let spk = {
+                            speakerUserId : item.speakerUserId,
+                            name : item.realName,
+                            img : item.avatar
+                        }
+                        return spk
+                    })
+                    result2.push(obj)
+                })
+                this.activities = result2
+            })
+        },
         loadMore(){
             this.loadstate = true
             let loads = this.activities.slice(0,3)
@@ -187,7 +214,7 @@ export default {
     .el-header {
         font-size: 36px;
         padding: 10px 30px;
-        color: $color-primary;
+        color: #1f6fff;
     }
     hr {	
 		width: 95%;

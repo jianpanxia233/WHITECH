@@ -50,6 +50,11 @@ const routes = [
         component: () => import('../views/meetingroom.vue')
     },
     {
+        path: '/othersInfo',
+        name: 'othersInfo',
+        component: () => import(`../views/othersInfo.vue`)
+     },
+    {
         path: '/dashbord',
         name: 'dashbord',
         component: () => import('../views/Dashbord.vue'),

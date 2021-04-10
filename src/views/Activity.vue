@@ -21,7 +21,7 @@
             </div>
             <hr/>
             <div class="el-main" ref="activitybox">
-                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.index)">
+                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -50,7 +50,7 @@
             </div>
             <hr/>
             <div class="el-main" ref="activitybox">
-                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.index)">
+                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -129,51 +129,6 @@ export default {
                             img: require(`@/assets/persons/talk2.jpg`)
                         },
                     ]
-                },
-                {
-                    name: `颜色与时尚`,
-                    img: require(`@/assets/activity_3.png`),
-                    time: `2021年2月1日，星期一-2021年12月5日，星期日`,
-                    speakers: [
-                        {
-                            name: `中本聪`,
-                            img: require(`@/assets/persons/talk1.png`)
-                        },
-                        {
-                            name: `V姐`,
-                            img: require(`@/assets/persons/talk2.jpg`)
-                        },
-                    ]
-                },
-                {
-                    name: `小型企业成长与管理`,
-                    img: require(`@/assets/activity_2.png`),
-                    time: `2021年3月21日，星期日-2021年3月22日，星期一`,
-                    speakers: [
-                        {
-                            name: `中本聪`,
-                            img: require(`@/assets/persons/talk1.png`)
-                        },
-                        {
-                            name: `V姐`,
-                            img: require(`@/assets/persons/talk2.jpg`)
-                        },
-                    ]
-                },
-                {
-                    name: `按键与频率`,
-                    img: require(`@/assets/activity_1.png`),
-                    time: `2021年3月23日，星期二，2：00 PM-4:30 PM`,
-                    speakers: [
-                        {
-                            name: `中本聪`,
-                            img: require(`@/assets/persons/talk1.png`)
-                        },
-                        {
-                            name: `V姐`,
-                            img: require(`@/assets/persons/talk2.jpg`)
-                        },
-                    ]
                 }
             ],
             loadstate: false
@@ -186,6 +141,32 @@ export default {
     },
     created(){
         this.timer=setInterval(this.next.bind(this),2000)
+    },
+    mounted() {
+        this.$http
+            .get('/activity/list?current=1&size=10')
+            .then(result => {
+                let activities = result.records
+                let result2 = []
+                activities.forEach( item => {
+                    let obj = {}
+                    obj.id = item.activityId
+                    obj.name = item.title
+                    obj.img = item.cover
+                    obj.time = `${item.startTime}---${item.startTime}`
+                    obj.speakers = item.activitySpeakers.map(item => {
+                        let spk = {
+                            speakerUserId : item.speakerUserId,
+                            name : item.realName,
+                            img : item.avatar
+                        }
+                        return spk
+                    })
+                    result2.push(obj)
+                })
+                this.activities = result2
+            }
+            )
     },
     methods: {
         loadMore(){
@@ -303,7 +284,7 @@ export default {
     .el-header {
         font-size: 36px;
         padding: 10px 30px;
-        color: $color-primary;
+        color: #1f6fff;
     }
     hr {	
 		width: 95%;

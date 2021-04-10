@@ -7,8 +7,8 @@
                 <el-main class="main">这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明,这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明</el-main>
                 </el-container>
                 <div>
-                    <el-button type="primary">举办自己的活动</el-button>
-                    <el-button type="danger">参观现有的活动</el-button>
+                    <el-button type="primary" @click="hostEvent">举办自己的活动</el-button>
+                    <el-button type="danger" @click="goAround">参观现有的活动</el-button>
                 </div>
             </div>
             <div class="description">
@@ -34,7 +34,7 @@
                     </el-container>
                 </el-main>
                 <el-footer>
-                     <el-button type="primary">举办活动</el-button>
+                     <el-button type="primary" @click="hostEvent">举办活动</el-button>
                 </el-footer>
             </el-container>
         </div>
@@ -51,10 +51,24 @@
                 </el-footer>
             </el-container>
         </div>
+        <el-dialog
+        title="活动详情填写"
+        :visible.sync="dialogVisible"
+        class="apply-deyail"
+        >
+            <hostModal @child-say="listen" ref="hostmodal"/>
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="publishEvent">发布</el-button>
+        </el-dialog>
     </div>
 </template>
 <script>
+import Cookies from 'js-cookie';
+import hostModal from '@/components/hostmodal.vue'
 export default {
+    components: {
+        hostModal
+    },
     data() {
         return {
             Events: [
@@ -86,7 +100,28 @@ export default {
                     id: 2,
                     name: '加入我们'
                 }
-            ]
+            ],
+            dialogVisible: false
+        }
+    },
+    methods: {
+        hostEvent(){
+            let token = Cookies.get(process.env.VUE_APP_COOKIE_KEY)
+            if(token=='undefined'){ 
+              this.$router.push(`/login`)
+            }
+            else{
+                this.dialogVisible = true   
+            }
+        },
+        goAround(){
+            this.$router.push( `/activity`)
+        },
+        publishEvent(){
+            this.$refs.hostmodal.publish()
+        },
+        listen() {
+            this.dialogVisible = false
         }
     }
 }

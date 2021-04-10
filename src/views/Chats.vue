@@ -22,9 +22,10 @@
           <div class="list">
             <div
               class="list-item"
+              :class="{active: item.userId == talker}"
               v-for="(item, index) in contacts"
               :key="index"
-              @click="tomessagebox(item.name)"
+              @click="tomessagebox(item.userId,item.name)"
             >
               <div class="img">
                 <img :src="item.portraitUri" :alt="item.name" />
@@ -32,6 +33,9 @@
               <div>
                 <div class="name">{{ item.name }}</div>
                 <div class="message">{{ item.message }}</div>
+              </div>
+              <div class="time">
+                {{item.time}}
               </div>
               <div class="tips" v-show="item.unread">
                 <span>{{item.unread}}</span>
@@ -55,7 +59,7 @@
       </div>
       <div class="main-box" v-show="!system">
         <div class="title">
-          <span>和{{ talker }}的对话</span>
+          <span>和{{ name }}的对话</span>
         </div>
         <div class="content">
           <div class="message-wrapper">
@@ -100,6 +104,7 @@
               :rows="3"
               placeholder="请输入内容"
               v-model="textarea"
+              @keyup.enter="sendMessage"
             >
             </el-input>
           </div>
@@ -124,17 +129,12 @@ export default {
       searchname: "",
       contacts: [
         {
-          name: "小明",
-          message: "你好",
-          portraitUri: require(`@/assets/persons/talk1.png`),
-          unread: 1
-        },
-        {
-          name: "小刚",
-          message: "你好",
-          portraitUri: require(`@/assets/persons/talk2.jpg`),
+          name: "",
+          userId: "",
+          message: "",
+          portraitUri: '',
           unread: 0
-        },
+        }
       ],
       system: true,
       sysmessages: [
@@ -148,6 +148,7 @@ export default {
         },
       ],
       talker: "",
+      name: "",
       textarea: "",
       im: {}
     };
@@ -164,26 +165,36 @@ export default {
         console.log(this.searchname);
       }, 1000);
     },
-    tomessagebox(name) {
-      this.talker = '1373999894674587650';
+    tomessagebox(id,name) {
+      this.name = name
+      this.talker = id;
       var conversation = this.im.Conversation.get({
         targetId: this.talker,
         type: RongIMLib.CONVERSATION_TYPE.PRIVATE
       });
       var option = {
-      timestamp: +new Date(),
-      count: 20
+        timestamp: +new Date(),
+        count: 20
       };
-    let that = this
-    conversation.getMessages(option).then(function(result){
-    var list = result.list; // 历史消息列表
-    var hasMore = result.hasMore; // 是否还有历史消息可以获取
-    that.messageHistory = list
-    that.system = false;
-    console.log('获取历史消息成功', list, hasMore);
-    });
+      conversation.read().then(()=>{
+          let that = this
+          this.contacts.forEach(el => {
+            if(el.userId==id){
+              el.unread = 0
+            }
+          })
+          conversation.getMessages(option).then(function(result){
+          var list = result.list; // 历史消息列表
+          // var hasMore = result.hasMore; // 是否还有历史消息可以获取
+          that.messageHistory = list
+          that.$nextTick(that.scrollEnd);
+          that.system = false;
+          });
+      }
+      )
     },
     sendMessage() {
+        // if(!this.textarea) return false
         var conversation = this.im.Conversation.get({
         // targetId
         targetId: this.talker,
@@ -200,40 +211,56 @@ export default {
             content: this.textarea, // 文本内容
             },
         })
-        .then(function (message) {
-            console.log("发送文字消息成功");      
+        .then(message=>{
+          this.messageHistory.push(message)
+          this.textarea = ''
+          this.$nextTick(this.scrollEnd)
         })
-        .catch((error) => {
-            console.log("发送文字消息失败", error.code, error.msg);
-        });
+    },
+    scrollEnd(){
+      //添加完消息 跳转到最后一条
+      var list = document.querySelectorAll(".message-item");
+      if (list.length > 1) {
+          var last = list[list.length - 1];
+          last.scrollIntoView();
+      }
     },
     tosystem() {
       this.system = true;
+      this.talker = ''
       this.getmessage()
     },
     markdown() {
         console.log('标记已读')
     },
     chatInit() {
+        var that = this 
         var callbacks = {
             CONNECTED: function(conversation) {
               console.log('触发回调')
-              this.setMessageList() 
+              // that.setMessageList() 
+              // that.tomessagebox(this.talker)
             },
             Received: function(message) {
-              let conversation = this.im.Conversation.get({
-                  targetId: this.talker,
-                  type: RongIMLib.CONVERSATION_TYPE.PRIVATE
-              });
-
-              conversation.getUnreadCount().then(function(count) {
-                  console.log('获取指定会话未读数成功', count);
-                  this.contacts[0].unread = count
+              that.messageHistory.push(message)
+              let list = JSON.parse(localStorage.getItem('resultList'))
+              list.forEach((item,index) => {
+                onreceive(item.targetId,index)
               })
+              function onreceive(id,index){
+                let conversation = that.im.Conversation.get({
+                  targetId: id,
+                  type: RongIMLib.CONVERSATION_TYPE.PRIVATE
+                });
+                conversation.getUnreadCount().then(function(count) {
+                    that.contacts[index].unread = count
+                    that.setMessageList()
+                    that.$nextTick(that.scrollEnd)
+                })
+              }
             }
         };
         this.im = init(callbacks)
-        this.im.disconnect().then(() => console.log('断开链接成功'))
         this.im.connect({
           token:Cookies.get('IM_TOKEN'),
         })
@@ -241,18 +268,14 @@ export default {
         console.log("链接成功, 链接用户 id 为: ", user.id);
         this.setMessageList()
     }).catch(err => console.log(err));
-    // getChatList() {
-    // //    object.conversationList.forEach( (el,index) => {
-    // //        this.contacts[index].message = el.content.content
-    // //        this.contacts[index].name = el.targetId
-    // //        this.contacts[index].time = getDate(el.sendTime,'yyyy/mm/dd')
-    // //    })
-    // }
     },
     setMessageList(){
         this.im.Conversation.getList().then(list => {
         localStorage.setItem("resultList", JSON.stringify(list));
         console.log('获取会话列表成功', list);
+        list.forEach((el,index) => {
+          this.getUserInfo(el.targetId,index)
+        })
         this.getmessage()
         }).catch(error => {
             console.log('获取会话列表失败: ', error.code, error.msg);
@@ -262,10 +285,16 @@ export default {
         let result = JSON.parse(localStorage.getItem('resultList'))
         result.forEach( (el,index) => {
         this.contacts[index].message = el.latestMessage.content.content
-        this.contacts[index].name = el.targetId
-        this.contacts[index].time = getDate(el.latestMessage.sentTime,'yyyy/mm/dd')
+        this.contacts[index].time = getDate('yyyy/mm/dd',el.latestMessage.sentTime)
         })
     },
+    getUserInfo(userId,index){
+      this.$http.get(`/user/info/${userId}`).then(result => {
+            this.contacts[index].userId = userId
+            this.contacts[index].name = result.realName
+            this.contacts[index].portraitUri = result.avatar
+        })
+    }
   },
 }
 </script>
@@ -300,7 +329,7 @@ export default {
         }
         span:hover {
           cursor: pointer;
-          color: $color-primary;
+          color: #1f6fff;
         }
       }
       div {
@@ -341,7 +370,11 @@ export default {
           }
           .message {
             font-size: 12px;
-            color: $color-primary;
+            color: #1f6fff;
+          }
+          .time {
+            color: gray;
+            font-size: 10px
           }
           .tips {
             width: 20px;
@@ -359,6 +392,9 @@ export default {
         }
         .list-item:hover {
           cursor: pointer;
+          background-color: #20256460;
+        }
+        .active {
           background-color: #20256460;
         }
       }

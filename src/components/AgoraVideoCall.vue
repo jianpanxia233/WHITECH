@@ -23,7 +23,7 @@
         <i class="ag-icon ag-icon-mic-off"></i>
       </span>
       <span 
-        @click="switchDisplay"
+        @click="screenshare"
         class="ag-btn displayModeBtn"
         :class="{'disabled': streamList.length > 4}"
         title="Screen sharing">
@@ -82,6 +82,7 @@ const tile_canvas = {
 export default {
   data() {
     return {
+      screenorcamera: 1,
       client: {},
       localStream: {},
       shareClient: {},
@@ -99,7 +100,8 @@ export default {
     "channel",
     "baseMode",
     "appId",
-    "uid"
+    "uid",
+    "publisherToken"
   ],
 
   methods: {
@@ -167,7 +169,54 @@ export default {
         rt.removeStream(stream.getId());
       });
     },
-
+    screenshare(){
+      if(this.screenorcamera==1){
+          this.removeStream(this.uid)
+          let screenstream = AgoraRTC.createStream({
+            streamID: this.uid,
+            audio: true,
+            video: false,
+            screen: true,
+          });
+          this.localStream = screenstream
+          this.localStream.init(
+              () => {
+                if (this.attendeeMode !== "audience") {
+                  this.addStream(this.localStream, true);
+                  this.client.publish(this.localStream, err => {
+                    console.log("Publish local stream error: " + err);
+                  });
+                }
+                this.readyState = true;
+                this.screenorcamera = 2
+              },
+              err => {
+                console.log("getUserMedia failed", err);
+                this.readyState = true;
+              }
+            );
+      } else if(this.screenorcamera ==2) {
+        let $ = this
+        $.removeStream($.uid)
+        $.localStream = $.streamInit($.uid, $.attendeeMode, $.videoProfile);
+        $.localStream.init(
+          () => {
+            if ($.attendeeMode !== "audience") {
+              $.addStream($.localStream, true);
+              $.client.publish($.localStream, err => {
+                console.log("Publish local stream error: " + err);
+              });
+            }
+            $.readyState = true;
+            $.screenorcamera = 1
+          },
+          err => {
+            console.log("getUserMedia failed", err);
+            $.readyState = true;
+          }
+        );
+      }
+    },
     removeStream(uid) {
       this.streamList.map((item, index) => {
         if (item.getId() === uid) {
@@ -266,6 +315,7 @@ export default {
               console.log("Client failed to leave.");
             }
           );
+        this.$emit('child-say')
       } finally {
         this.readyState = false;
         this.client = null;
@@ -277,8 +327,11 @@ export default {
   },
 
   created() {
+    console.log('///////////////')
     let $ = this;
-    let token = '0067c62d55b173740488d2da460cf9081a0IABx8SMJ49Aj21FGrXC8/sUUPoI63ZMBU1sJkg+K+yvwUgx+f9gAAAAAEABfjXZEwUFkYAEAAQDCQWRg'
+    let token = this.publisherToken;
+    console.log(token)
+    console.log(this.channel)
     // init AgoraRTC local client
     $.client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
     $.client.init($.appId, () => {
@@ -432,7 +485,7 @@ export default {
 /* button group */
 .ag-btn-group {
   height: 70px;
-  width: calc(100% - 60px);
+  width: calc(100% - 200px);
   margin: 0 auto;
   position: absolute;
   bottom: 55px;

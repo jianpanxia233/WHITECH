@@ -6,20 +6,34 @@
             status-icon 
             :rules="rules" 
             ref="ruleForm"
-            label-position="left"
-            label-width="100px">
+            label-position="right"
+            >
                 <el-form-item label="头像" prop="portrait">
                     <div class="img">
-                    <img :src="ruleForm.portrait" :alt="ruleForm.name+'头像'"/>  
+                    <img v-show="!imageUrl"  :src="ruleForm.portrait" :alt="ruleForm.name+'头像'"/>  
                     </div>
+                    <el-upload
+                    v-show="edit"
+                    class="avatar-uploader"
+                    ref="upload"
+                    action="string"
+                    :show-file-list="false"
+                    :http-request="handleupload"
+                    :before-upload="before_upload"
+                    :on-change="fileChange"
+                    :file-list="fileList"
+                    >
+                    <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                    </el-upload>
                 </el-form-item>
                 <el-form-item label="姓名" prop="name">
                     <span v-show="!edit">{{ruleForm.name}}</span>
                     <el-input v-model="ruleForm.name"  v-show="edit"></el-input>
                 </el-form-item>
-                <el-form-item label="年龄" prop="age">
-                    <span v-show="!edit">{{ruleForm.age}}</span>
-                    <el-input v-model.number="ruleForm.age"  v-show="edit"></el-input>
+                <el-form-item label="社会角色" prop="headLine">
+                    <span v-show="!edit">{{ruleForm.headLine}}</span>
+                    <el-input v-model.number="ruleForm.headLine"  v-show="edit"></el-input>
                 </el-form-item>
                 <el-form-item label="自我介绍" prop="sign">
                     <span v-show="!edit">{{ruleForm.sign}}</span>
@@ -37,7 +51,13 @@
             </el-form>
         </div>
         <div class="el-header">
-            <div>我举办的活动</div>
+            <div>
+                粉丝数：{{fansNum}}
+            </div>
+            <div>
+                关注数：{{followNum}}
+            </div>
+            <div style="margin-top:40px">我举办的活动</div>
             <el-button type="primary" @click="hostEvent">举办活动</el-button>
         </div>
         <hr/>
@@ -65,9 +85,9 @@
         :visible.sync="dialogVisible"
         class="apply-deyail"
         >
-            <hostModal/>
+            <hostModal @child-say="listen" ref="hostmodal"/>
             <el-button @click="dialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="dialogVisible = false">发布</el-button>
+            <el-button type="primary" @click="publishEvent">发布</el-button>
         </el-dialog>
     </div>
 </template>
@@ -84,7 +104,7 @@ export default {
             ruleForm: {
                 portrait: require(`@/assets/persons/talk1.png`),
                 name: '小杠',
-                age: '22',
+                headLine: '22',
                 sign: '每天进步一点点'
                 },
             rules:{
@@ -155,19 +175,109 @@ export default {
                     ]
                 }
             ],
-            view: false
+            view: false,
+            fansNum: 1,
+            followNum: 0,
+            fileList: [],
+            imageUrl: '',
         }
+    },
+    mounted(){
+        this.queryActicities()
+        this.queryUserInfo()
     },
     methods: {
         resetForm(name){
             this.edit = true
         },
-        submitForm(name) {
-            this.edit = false
+        submitForm() {
+            let form = {
+                bio : this.ruleForm.sign,
+                headLine : this.ruleForm.headLine,
+                realName : this.ruleForm.name
+            }
+            this.$http.put(`/user`,form).then(result => {
+                this.ruleForm.portrait = result.avatar
+                // this.ruleForm.sign = result.bio
+                this.ruleForm.headLine = result.headLine
+                this.ruleForm.name = result.realName 
+                this.edit = false
+            })
+
         },
         hostEvent(){
             this.dialogVisible = true
+        },
+        publishEvent(){
+            this.$refs.hostmodal.publish()
+        },
+        listen() {
+            this.dialogVisible = false
+        },
+        queryActicities(){
+            this.$http.get(`/user/activity/page?current=1&size=10&status=1`)
+            .then(result => {
+                let activities = result.records
+                let result2 = []
+                activities.forEach( item => {
+                    let obj = {}
+                    obj.id = item.activityId
+                    obj.name = item.title
+                    obj.img = item.cover
+                    obj.time = `${item.startTime}---${item.startTime}`
+                    obj.speakers = item.activitySpeakers.map(item => {
+                        let spk = {
+                            speakerUserId : item.speakerUserId,
+                            name : item.realName,
+                            img : item.avatar
+                        }
+                        return spk
+                    })
+                    result2.push(obj)
+                })
+                this.activities = result2
+            })
+        },
+        queryUserInfo(){
+            this.$http.get(`/user/info`).then(result => {
+                this.ruleForm.headLine = result.headLine
+                this.ruleForm.portrait = result.avatar
+                this.ruleForm.name = result.realName
+                this.followNum = result.followNum
+                this.fansNum = result.fansNum
+            })
+        },
+        handleupload(param) {
+        const formData = new FormData()
+        formData.append('file', param.file)
+        this.$http.put(`/user/avatar`,formData).then(result => {
+                    this.ruleForm.portrait = result.avatar
+                    this.imageUrl = result.avatar
+                    // this.ruleForm.sign = result.bio
+                    this.ruleForm.headLine = result.headLine
+                    this.ruleForm.name = result.realName 
+                    this.edit = false
+                    this.$message({
+                    message: '上传成功',
+                    type: 'success'
+                    });
+                })
+      },
+      fileChange(file) {
+        this.$refs.upload.clearFiles() //清除文件对象
+        this.fileList = [{name: file.name, url: file.url}]
+      },
+      before_upload(file) {
+        const isJPG = (file.type === 'image/jpeg'||file.type === 'image/png');
+        const isLt2M = file.size / 1024 / 1024 < 1;
+        if (!isJPG) {
+          this.$message.error('上传图片只能是 JPG/PNG 格式!');
         }
+        if (!isLt2M) {
+          this.$message.error('上传头像图片大小不能超过 1MB!');
+        }
+        return isJPG && isLt2M;
+      },
     }
 }
 </script>
@@ -181,6 +291,7 @@ export default {
         width: 40%;
     }
     .img{
+        float: left;
         width: 40px;
         height: 40px;
     }

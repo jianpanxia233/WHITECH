@@ -14,14 +14,14 @@
                             <div class="list-item" 
                                 v-for="(item,index) in concentrates" 
                                 :key="index"
-                                @click="toSpace(item.name)"
+                                @click="toSpace(item.realName)"
                                 >
                                     <div class="img">
-                                    <img :src="item.portraitUri" :alt="item.name"/>  
+                                    <img :src="item.avatar" :alt="item.realName"/>  
                                     </div>
                                     <div>
                                         <div class="name">{{item.name}}</div>
-                                        <div class="message">{{item.sign}}</div>
+                                        <div class="message"></div>
                                     </div>                    
                             </div>
                         </div>
@@ -39,14 +39,14 @@
                             <div class="list-item" 
                                 v-for="(item,index) in followers" 
                                 :key="index"
-                                @click="toSpace(item.name)"
+                                @click="toSpace(item.realName)"
                                 >
                                     <div class="img">
-                                    <img :src="item.portraitUri" :alt="item.name"/>  
+                                    <img :src="item.avatar" :alt="item.realName"/>  
                                     </div>
                                     <div>
                                         <div class="name">{{item.name}}</div>
-                                        <div class="message">{{item.sign}}</div>
+                                        <div class="message"></div>
                                     </div>                    
                             </div>
                         </div>
@@ -61,7 +61,7 @@ export default {
     data() {
       return {
         activeTab: 'concentrate',
-        searchname: '小明',
+        searchname: '',
         concentrates: [
                 {
                     name: '小明',
@@ -87,6 +87,15 @@ export default {
             }
         ],
       }
+    },
+    mounted(){
+        let realName = localStorage.getItem('realName')
+        this.$http.get(`/user/follow/page?current=1&size=10&realName=${realName}`).then(result => {
+            this.concentrates = result.records
+        })
+        this.$http.get(`/user/fans/page?current=1&size=10&realName=${realName}`).then(result => {
+            this.followers = result.records
+        })
     },
     methods: {
         handleClick(tab,event){

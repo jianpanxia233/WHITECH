@@ -20,11 +20,10 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   response => {
     if(response.data.code===0) {
-      return response.data.code == 0
-       ? Promise.resolve(response.data.data)
-       : Promise.reject(response)
+      return Promise.resolve(response.data.data)
+    } else {
+      return Promise.reject(response)
     }
-    return Promise.resolve(response.data);
   },
   error => {
     return Promise.reject(error.response);

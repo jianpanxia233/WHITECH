@@ -106,10 +106,10 @@ export default {
     padding: 0 35px;
     cursor: pointer;
     &:hover {
-      color: $color-primary;
+      color: #1f6fff;
     }
     &.router-link-active {
-      color: $color-success;
+      color: #1f6fff;
     }
   }
 }
@@ -155,7 +155,7 @@ export default {
   }
 }
 .selected {
-  background-color: $color-primary;
+  background-color: #1f6fff;
   opacity: 0.6;
 }
 .slide-enter-active,

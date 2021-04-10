@@ -13,20 +13,6 @@
                     placeholder="请输入您认为合适的活动名"
                 ></el-input>
             </el-form-item>
-            <el-form-item label="活动类型" prop="eventType">
-                <el-select
-                    v-model="eventInfo.eventType"
-                    filterable
-                    placeholder = "请选择活动类型"
-                >
-                    <el-option
-                      v-for="item in eventTypes"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    ></el-option>
-                </el-select>
-            </el-form-item>
             <el-form-item label="活动介绍" prop="eventDetail">
                 <el-input
                     v-model="eventInfo.eventDetail"
@@ -38,46 +24,34 @@
             <el-form-item label="活动图片" prop="eventPic">
                 <el-upload
                     class="avatar-uploader"
-                    action="https://jsonplaceholder.typicode.com/posts/"
+                    ref="upload"
+                    action="string"
                     :show-file-list="false"
-                    :on-success="handleAvatarSuccess"
-                    :before-upload="beforeAvatarUpload">
+                    :http-request="handleupload"
+                    :before-upload="before_upload"
+                    :on-change="fileChange"
+                    :file-list="fileList"
+                    >
                     <img v-if="imageUrl" :src="imageUrl" class="avatar">
                     <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
             </el-form-item>
-            <el-form-item label="主讲人" prop="eventTalker">
-                <el-select
-                v-model="eventInfo.eventTalker"
-                multiple
-                filterable
-                remote
-                reserve-keyword
-                placeholder="请输入昵称"
-                :remote-method="remoteMethod"
-                :loading="loading"
-                >
-                <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                ></el-option>
-                </el-select>
-            </el-form-item>
             <el-form-item label="选择时间" prop="eventTime">
                 <el-date-picker
                 v-model="eventInfo.eventTime"
-                type="datetime"
-                placeholder="选择日期时间"
-                align="right"
-                :picker-options="pickerOptions">
+                :picker-options="pickerOptions"
+                type="datetimerange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                align="right">
                 </el-date-picker>
             </el-form-item>
         </el-form>
     </div>
 </template>
 <script>
+import Moment from 'moment'
 export default {
     name: 'hostmodal',
     props: {
@@ -86,103 +60,132 @@ export default {
             default() {
                 return false
             }
+        },
+        activityId : {
+          type: String,
+          default() {
+            return '';
+          },
         }
     },
     data() {
         return {
-            imageUrl: '',
+            imageUrl: 'https://hopintch.oss-cn-shanghai.aliyuncs.com/bb85df4c374c4ed09bf0e0ac06b12140.jpg',
+            fileList: [],
             eventInfo:{
                 eventName: '',
-                eventType: '',
                 eventDetail: '',
-                eventTalker: '',
+                eventPic: '',
                 eventTime: ''
             },
             eventRules: {
                 eventName:  { required: true, message: '请输入名称', trigger: 'blur' },
-                eventType:  { required: true, message: '请选择类型', trigger: 'blur' },
-                eventTalker:  { required: true, message: '请输入昵称', trigger: 'blur' },
                 eventTime:  { required: true, message: '请选择时间', trigger: 'blur' }
             },
-            eventTypes : ['宣讲','聚会','面试'], 
-            options: [],
             loading: false,
-            list: [],
-            states: ["Alabama", "Alaska", "Arizona",
-                "Arkansas", "California", "Colorado",
-                "Connecticut", "Delaware", "Florida",
-                "Georgia", "Hawaii", "Idaho", "Illinois",
-                "Indiana", "Iowa", "Kansas", "Kentucky",
-                "Louisiana", "Maine", "Maryland",
-                "Massachusetts", "Michigan", "Minnesota",
-                "Mississippi", "Missouri", "Montana",
-                "Nebraska", "Nevada", "New Hampshire",
-                "New Jersey", "New Mexico", "New York",
-                "North Carolina", "North Dakota", "Ohio",
-                "Oklahoma", "Oregon", "Pennsylvania",
-                "Rhode Island", "South Carolina",
-                "South Dakota", "Tennessee", "Texas",
-                "Utah", "Vermont", "Virginia",
-                "Washington", "West Virginia", "Wisconsin",
-                "Wyoming"],
             pickerOptions: {
-                shortcuts: [{
-                    text: '今天',
-                    onClick(picker) {
-                    picker.$emit('pick', new Date());
-                    }
-                }, {
-                    text: '昨天',
-                    onClick(picker) {
-                    const date = new Date();
-                    date.setTime(date.getTime() - 3600 * 1000 * 24);
-                    picker.$emit('pick', date);
-                    }
-                }, {
-                    text: '一周前',
-                    onClick(picker) {
-                    const date = new Date();
-                    date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
-                    picker.$emit('pick', date);
-                    }
-                }]
-              },
+                disabledDate(time) {
+                    return time.getTime() <= (Date.now()-(24*60*60*1000))
+                }
+            }
             }
     },
     mounted() {
-        this.list = this.states.map(item => {
-        return { value: `value:${item}`, label: `label:${item}` };
-      });
+        
     },
     methods: {
-      remoteMethod(query) {
-        if (query !== '') {
-          this.loading = true;
-          setTimeout(() => {
-            this.loading = false;
-            this.options = this.list.filter(item => {
-              return item.label.toLowerCase()
-                .indexOf(query.toLowerCase()) > -1;
-            });
-          }, 200);
-        } else {
-          this.options = [];
-        }
+      handleupload(param) {
+        const formData = new FormData()
+        formData.append('file', param.file)
+        this.$http.post('/oss/upload/image',formData).then(response => {
+          console.log(response)
+          // this.imageUrl = URL.createObjectURL(file.raw);
+          this.$message({
+          message: '上传成功',
+          type: 'success'
+          });
+          this.imageUrl=response
+        }).catch(response => {
+          console.log('上传图片失败')
+        })
       },
-      handleAvatarSuccess(res, file) {
-        this.imageUrl = URL.createObjectURL(file.raw);
+      fileChange(file) {
+        this.$refs.upload.clearFiles() //清除文件对象
+        this.fileList = [{name: file.name, url: file.url}]
       },
-      beforeAvatarUpload(file) {
-        const isJPG = file.type === 'image/jpeg';
-        const isLt2M = file.size / 1024 / 1024 < 2;
-
+      before_upload(file) {
+        const isJPG = (file.type === 'image/jpeg'||file.type === 'image/png');
+        const isLt2M = file.size / 1024 / 1024 < 1;
         if (!isJPG) {
-          this.$message.error('上传头像图片只能是 JPG 格式!');
+          this.$message.error('上传图片只能是 JPG/PNG 格式!');
         }
         if (!isLt2M) {
-          this.$message.error('上传头像图片大小不能超过 2MB!');
+          this.$message.error('上传头像图片大小不能超过 1MB!');
         }
         return isJPG && isLt2M;
+      },
+      publish(){
+        this.$refs.eventInfo.validate(valid => {
+          if(valid){
+            let form = {
+              cover : this.imageUrl,
+              description: this.eventInfo.eventDetail,
+              endTime: "",
+              startTime: "",
+              title: this.eventInfo.eventName
+            }
+            let time = this.eventInfo.eventTime
+            let starttime = Moment(time[0]).format("YYYY-MM-DD HH:mm:ss")
+            let endtime = Moment(time[1]).format("YYYY-MM-DD HH:mm:ss")
+            form.endTime = endtime
+            form.startTime = starttime
+            this.$http.post('/user/activity',form).then(response => {
+              if(response){
+                this.$message({
+                message: '发布活动成功',
+                type: 'success'
+                });
+                this.$refs.eventInfo.resetFields();
+                this.imageUrl = ''
+                this.$emit('child-say')
+              } else if(response.code){
+                this.$message.error('发布活动失败');
+              }
+            })
+          }
+        })
+      },
+      refresh(activityId){
+        this.$refs.eventInfo.validate(valid => {
+          if(valid){
+            let form = {
+              cover : this.imageUrl,
+              description: this.eventInfo.eventDetail,
+              endTime: "",
+              startTime: "",
+              title: this.eventInfo.eventName
+            }
+            let time = this.eventInfo.eventTime
+            let starttime = Moment(time[0]).format("YYYY-MM-DD HH:mm:ss")
+            let endtime = Moment(time[1]).format("YYYY-MM-DD HH:mm:ss")
+            form.endTime = endtime
+            form.startTime = starttime
+            form.activityId = activityId
+            this.$http.put('/user/activity',form).then(response => {
+              if(response){
+                this.$message({
+                message: '更新活动成功',
+                type: 'success'
+                });
+                this.$refs.eventInfo.resetFields();
+                this.imageUrl = ''
+                this.$emit('child-say')
+              } else if(response.code){
+                this.$message.error('更新活动失败');
+              }
+            })
+          }
+        })
       }
     }
 }
