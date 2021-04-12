@@ -34,6 +34,7 @@
                 <p 
                 style="display:flex;margin-left:30px;margin-top:30px">
                 <el-input
+                 v-show="userprofile"
                     v-model="mobile"
                     style="max-width: 500px;margin-top: 10px"
                     placeholder="请输入添加成员手机号"
@@ -63,7 +64,7 @@
         <div class="agenda">
             <div class="head">
                 <p>议程</p>
-                <p 
+                <p  v-show="userprofile"
                 style="display:flex;margin-left:30px;margin-top:30px">
                 <el-input
                     v-model="agendaTitle"
@@ -80,12 +81,11 @@
                 end-placeholder="结束日期"
                 align="right">
                 </el-date-picker>
-                <span
-                v-show="userprofile">
+                <span>
                 <el-button
                 @click="addAgenda">添加</el-button></span></p>
             </div>
-            <div v-for="(item,index) in agendas" :key="index">
+            <div v-for="(item,index) in agendas" :key="index" style="margin:20px">
                 <el-row>
                     <el-col :span="6">
                         <div class="grid-content bg-purple">
@@ -104,14 +104,15 @@
                             <span style="font-size:14px">{{item.starTime}}--{{item.endTime}}</span>
                         </div>
                     </el-col>
-                    <el-col :span="5">
+                    <el-col :span="6">
                         <div class="grid-content bg-purple-light">
-                            <el-button type="primary" size="small" @click="entermeeting(item.activityAgendaId)">预览</el-button>
+                            <el-button type="primary" size="small" @click="entermeeting(item.activityAgendaId,'preview')">预览</el-button>
+                            <el-button type="primary" size="small" @click="entermeeting(item.activityAgendaId,'join')">加入</el-button>
                             <el-button type="primary" 
                             size="small"
                             v-show="start"
                             @click="startmeeting(item.activityAgendaId)">开始</el-button>
-                            <el-button type="primary" 
+                            <el-button type="info" 
                             v-show="!start"
                             size="small"
                             @click="stopmeeting(item.activityAgendaId)">停止</el-button>
@@ -124,7 +125,7 @@
                             <el-button
                             size="small"
                             v-show="userprofile"
-                            @click="changeAgenda(item.activityAgendaId)">
+                            @click="openagendadialog(item)">
                                 修改
                             </el-button>
                         </div>
@@ -138,7 +139,7 @@
                         <div class="child-button"><el-button
                         @click="changeAgenda(item)">修改标题</el-button></div>
                     </div> -->
-                    <div class="item-agenda-child">
+                    <div class="item-agenda-child"  v-show="userprofile">
 
                     <!-- <el-input v-model="agendaMobile[index]"
                     style="max-width: 500px;margin-top: 10px"
@@ -175,25 +176,37 @@
         title="活动详情填写"
         :visible.sync="dialogVisible"
         class="apply-deyail"
-        :activityId="activityId"
         >
             <hostModal @child-say="listen" ref="hostmodal"/>
             <el-button @click="dialogVisible = false">取 消</el-button>
             <el-button type="primary" @click="publishEvent">发布</el-button>
         </el-dialog>
-        
+        <el-dialog
+        title="议程修改"
+        :visible.sync="agendaVisible"
+        >
+            <changeAgenda         
+            :options="speakers"
+            @child2-say="listen2"
+            ref="changeAgenda"/>
+            <el-button @click="agendaVisible = false">取 消</el-button>
+            <el-button type="primary" @click="changeAgenda">修改</el-button>
+        </el-dialog>
     </div>
 </template>
 <script>
 import Moment from 'moment'
 import hostModal from '@/components/hostmodal.vue'
+import changeAgenda from '@/components/changeAgenda.vue'
 export default {
     components: {
-        hostModal
+        hostModal,
+        changeAgenda
     },
     data() {
         return {
             dialogVisible: false,
+            agendaVisible:false,
             start: true,
             title: '',
             cover: '',
@@ -217,7 +230,6 @@ export default {
             mobile: '',
             agendaTitle: '',
             agendaMobile: [],
-            changeeventTime: '',
             activityId: '',
             isAttendee: true,
             isOrganizer: true,
@@ -226,7 +238,8 @@ export default {
                 disabledDate(time) {
                     return time.getTime() <= (Date.now()-(24*60*60*1000))
                 }
-            }
+            },
+            choosenagenda: {}
         }
     },
     computed: {
@@ -268,6 +281,10 @@ export default {
         },
         listen() {
             this.dialogVisible = false
+            this.queryInfo()
+        },
+        listen2(){
+            this.agendaVisible = false
             this.queryInfo()
         },
         queryInfo(){
@@ -325,6 +342,13 @@ export default {
                 }
             })
         },
+        openagendadialog(item){
+            this.agendaVisible = true;
+            this.choosenagenda = item
+            this.$nextTick(()=>{
+                this.$refs.changeAgenda.init(this.choosenagenda)
+            })
+        },
         addAgenda() {
             let form = {}
             let time = this.eventTime
@@ -342,31 +366,16 @@ export default {
                 }
             })
         },
-        changeAgenda(item) {
-            let form = {}
-            let time = this.changeeventTime
-            form.starttime = Moment(time[0]).format("YYYY-MM-DD HH:mm:ss")
-            form.endtime = Moment(time[1]).format("YYYY-MM-DD HH:mm:ss")
-            form.activityAgendaId = item.activityAgendaId
-            form.title = this.agendaTitle
-            let userIds = [] 
-            item.speakerVOS.forEach(item => {
-                userIds.push(item.speakerUserId)
-            })
-            form.userIds = userIds
-            this.$http.put(`/user/activity/agenda`).then(result => {
-                if(result){
-                    this.queryInfo()
-                }
-            })
+        changeAgenda() {
+            this.$refs.changeAgenda.publish()
         },
         deleteAgenda(agendaId) {
             this.$http.delete(`/user/activity/agenda/agenda/${agendaId}`).then(result => {
                 result ? this.queryInfo() : ''
             })
         },
-        entermeeting(agendaId){
-            this.$router.push(`/meetingroom?agendaId=${agendaId}`)
+        entermeeting(agendaId,status){
+            this.$router.push(`/meetingroom?agendaId=${agendaId}&&status=${status}`)
         },
         startmeeting(agendaId){
             this.$http.post(`/user/activity/agenda/start/${agendaId}`).then(result => {

@@ -21,7 +21,7 @@
             </div>
             <hr/>
             <div class="el-main" ref="activitybox">
-                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.id)">
+                <div class="itembox" v-for="(item,index) in comingactivities" :key="index" @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -32,7 +32,7 @@
                     </div>
                     <div class="foot">
                         <div class="character" v-for="(item2,index2) in item.speakers"
-                        :key="index2">
+                        :key="index2" @click.stop="gotoSpeaker(item2.speakerUserId)">
                             <img :src="item2.img" :alt="item2.name">
                         <p>{{item2.name}}</p>
                         </div>
@@ -50,7 +50,7 @@
             </div>
             <hr/>
             <div class="el-main" ref="activitybox">
-                <div class="itembox" v-for="(item,index) in activities" :key="index" @click="gotoDetail(item.id)">
+                <div class="itembox" v-for="(item,index) in endactivities" :key="index" @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -61,7 +61,7 @@
                     </div>
                     <div class="foot">
                         <div class="character" v-for="(item2,index2) in item.speakers"
-                        :key="index2" @click="gotoSpeaker(item2.index2)">
+                        :key="index2" @click.stop="gotoSpeaker(item2.speakerUserId)">
                             <img :src="item2.img" :alt="item2.name">
                         <p>{{item2.name}}</p>
                         </div>
@@ -82,6 +82,7 @@ export default {
     data() {
         return {
             imgindex:'0',//控制变量，默认显示第一张
+            currentpage: 1,
             flag:true,
             timer:null,
             activities: [
@@ -137,14 +138,24 @@ export default {
     computed: {
         imagesUrl() {
             return this.activities.slice(0,3)
+        },
+        comingactivities() {
+            return this.activities.filter(item => (item.status==1||item.status==0))
+        },
+        endactivities() {
+            return this.activities.filter(item => (item.status==2))
         }
     },
     created(){
         this.timer=setInterval(this.next.bind(this),2000)
     },
     mounted() {
-        this.$http
-            .get('/activity/list?current=1&size=10')
+        this.queryActivities()
+    },
+    methods: {
+        queryActivities(){
+            this.$http
+            .get(`/activity/list?current=${this.currentpage}&size=10`)
             .then(result => {
                 let activities = result.records
                 let result2 = []
@@ -154,6 +165,7 @@ export default {
                     obj.name = item.title
                     obj.img = item.cover
                     obj.time = `${item.startTime}---${item.startTime}`
+                    obj.status = item.status
                     obj.speakers = item.activitySpeakers.map(item => {
                         let spk = {
                             speakerUserId : item.speakerUserId,
@@ -164,15 +176,18 @@ export default {
                     })
                     result2.push(obj)
                 })
-                this.activities = result2
+                if(this.currentpage===1){
+                    this.activities = result2
+                } else{
+                    this.activities = this.activities.concat(result2)
+                }
+                this.currentpage = this.currentpage + 1
             }
-            )
-    },
-    methods: {
+        )
+        },
         loadMore(){
             this.loadstate = true
-            let loads = this.activities.slice(0,3)
-            this.activities = this.activities.concat(loads)
+            this.queryActivities()
             this.loadstate = false
         },
         //下一张
@@ -203,8 +218,8 @@ export default {
         gotoDetail(id){
             this.$router.push(`/activitydetail?activityId=${id}`)
         },
-        gotoSpeaker(){
-            this.$router.push(`/dashbord`)
+        gotoSpeaker(id){
+            this.$router.push(`/othersInfo?userId=${id}`)
         }
     }
 }

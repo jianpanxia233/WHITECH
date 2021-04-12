@@ -47,7 +47,7 @@
                     <p>研讨会、现场表演、峰会、播客录音、社区聚会、网络、现场问答</p>
                 </el-main>
                 <el-footer>
-                    <span v-for="item in Cases" :key="item.id">{{item.name}}</span>
+                    <span v-for="item in Cases" :key="item.id" @click="detailOfUs(item.id)">{{item.name}}</span>
                 </el-footer>
             </el-container>
         </div>
@@ -122,6 +122,10 @@ export default {
         },
         listen() {
             this.dialogVisible = false
+        },
+        detailOfUs(id){
+            let route = id === 2 ? 'joinus' : 'aboutus'
+            this.$router.push(`/${route}`)
         }
     }
 }
@@ -248,6 +252,7 @@ export default {
                 font-size: 16px;
                 color: rgba(255, 255, 255, 0.6);
                 margin: 0% 2%;
+                cursor: pointer;
             }
         }
     }

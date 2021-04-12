@@ -55,6 +55,16 @@ const routes = [
         component: () => import(`../views/othersInfo.vue`)
      },
     {
+        path: '/joinus',
+        name: 'joinus',
+        component: () => import(`../views/joinus.vue`)
+    },
+    {
+        path: '/aboutus',
+        name: 'aboutus',
+        component: () => import(`../views/aboutus.vue`)
+    },
+    {
         path: '/dashbord',
         name: 'dashbord',
         component: () => import('../views/Dashbord.vue'),

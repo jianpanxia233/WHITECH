@@ -31,6 +31,20 @@
                 :class="[msg.messageDirection == 1 ? 'my-msg' : 'your-msg']"
             >
                 <div v-if="msg.messageType == 'RC:TxtMsg'" class="message-text">
+                <!-- <div class="rong-avatar">
+                      <img
+                          v-if="msg.messageDirection == 1"
+                          @click="tomyinfo()"
+                          :src="myportraitUri"
+                          class="rong-avatar-bd"
+                      >
+                      <img
+                          v-else
+                          @click="tohisinfo()"
+                          :src="hisportraitUri"
+                          class="rong-avatar-bd"
+                      >
+                </div> -->
                 <div class="message-body">
                       <pre
                           class="user-msg"
@@ -78,12 +92,12 @@ export default {
   data() {
     return {
       videoProfile: "480p_4",
-      channel: Cookies.get("channel") || "tete",
+      channel: Cookies.get("channel") || "test",
       transcode: Cookies.get("transcode") || "interop",
       attendeeMode: Cookies.get("attendeeMode") || "video",
       baseMode: Cookies.get("baseMode") || "avc",
       uid: localStorage.getItem('userId'),
-      publisherToken: Cookies.get('publisherToken'),
+      publisherToken: Cookies.get("publisherToken"),
       im : {},
       chatRoom: {},
       messageHistory: [],
@@ -112,16 +126,11 @@ export default {
         timestrap: +new Date(),
         count: 20
       };
-      this.chatRoom.getMessages(option).then((result)=>{
-        this.messageHistory = result.list; // 历史消息列表
-        var hasMore = result.hasMore; // 是否还有历史消息可以获取
-        console.log('获取聊天室历史消息成功', result.list, hasMore);
-      });
-      this.chatRoom.getInfo().then(function(result){
-        var userCount = result.userCount;
-        var userInfos = result.userInfos;
-        console.log('获取聊天室信息成功', userCount, userInfos);
-      })
+      // this.chatRoom.getMessages(option).then((result)=>{
+      //   this.messageHistory = result.list; // 历史消息列表
+      //   var hasMore = result.hasMore; // 是否还有历史消息可以获取
+      //   console.log('获取聊天室历史消息成功', result.list, hasMore);
+      // });
     },
     sendMessage(){
       this.chatRoom.send({
@@ -150,12 +159,14 @@ export default {
   },
   mounted() {
     let agendaId = this.$route.query.agendaId
-    this.$http.post(`/user/activity/agenda/join/${agendaId}`).then(result => {
-      console.log('!!!!!!!!!')
-      console.log(result)
+    let status = this.$route.query.status
+    this.$http.post(`/user/activity/agenda/${status}/${agendaId}`).then(result => {
       Cookies.set('channel',agendaId)
-      Cookies.set('publisherToken',result)
-      // CooKies.set('chatRoom',result.chatRoom)
+      if(status=='join'){
+        Cookies.set('publisherToken',result.agoraToken)
+      } else if(status=='preview'){
+        Cookies.set('publisherToken',result.publisherToken)
+      }
     })
     var callbacks = {
         Received: (message)=>{
@@ -222,6 +233,8 @@ export default {
 }
 
 .ag-chatroom {
+  display: flex;
+  flex-direction: column;
   width: 200px;
   height: 100%;
   border-radius: 12px;
@@ -268,6 +281,20 @@ export default {
 
 .you-msg .message-text {
     padding-left: 1.39rem;
+}
+
+.message-text .rong-avatar {
+    flex-shrink: 0;
+    width: 35px;
+    height: 35px;
+    border-radius: 25px;
+    overflow: hidden;
+    cursor:pointer
+}
+
+.message-text .rong-avatar img {
+    height: 100%;
+    width: 100%;
 }
 </style>
 

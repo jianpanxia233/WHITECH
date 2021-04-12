@@ -62,7 +62,8 @@
         </div>
         <hr/>
         <div class="el-main" ref="activitybox">
-                <div class="itembox" v-for="(item,index) in activities" :key="index">
+                <div class="itembox" v-for="(item,index) in activities" :key="index"
+                @click="gotoDetail(item.id)">
                     <div class="headImg">
                         <img :src="item.img" :alt="item.name">
                     </div>
@@ -73,7 +74,7 @@
                     </div>
                     <div class="foot">
                         <div class="character" v-for="(item2,index2) in item.speakers"
-                        :key="index2">
+                        :key="index2" @click="gotoSpeaker(item2.speakerUserId)">
                             <img :src="item2.img" :alt="item2.name">
                         <p>{{item2.name}}</p>
                         </div>
@@ -278,6 +279,9 @@ export default {
         }
         return isJPG && isLt2M;
       },
+        gotoDetail(id){
+            this.$router.push(`/activitydetail?activityId=${id}`)
+        },
     }
 }
 </script>

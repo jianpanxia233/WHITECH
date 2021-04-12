@@ -8,8 +8,9 @@ export async function AuthGuard(to,from,next) {
         await request.get(`/user/info`).then(result => {
             localStorage.setItem('realName',result.realName)
             localStorage.setItem('userId',result.userId)
+            localStorage.setItem('avatar',result.avatar)
         })
-            next()
+        next()
     } else {
         if(whiteRouter.indexOf(to.path) !== -1){
             next()

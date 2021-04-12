@@ -6,7 +6,7 @@
             <hr/>
             <div class="el-main" ref="activitybox">
                 <div class="itembox"
-                 v-for="(item,index) in activities"
+                 v-for="(item,index) in comingactivities"
                  :key="index"
                  @click="gotoDetail(item.id)">
                     <div class="headImg">
@@ -38,7 +38,7 @@
             <!-- <hr/> -->
             <div class="el-main" ref="activitybox"> 
                 <div class="itembox" 
-                v-for="(item,index) in activities" 
+                v-for="(item,index) in endactivities" 
                 :key="index"
                 @click="gotoDetail(item.id)">
                     <div class="headImg">
@@ -168,6 +168,14 @@ export default {
     mounted(){
         this.queryActicities()
     },
+    computed: {
+        comingactivities() {
+            return this.activities.filter(item => (item.status==1||item.status==0))
+        },
+        endactivities() {
+            return this.activities.filter(item => (item.status==2))
+        }
+    },
     methods: {
         queryActicities(){
             this.$http.get(`/user/activity/page?current=1&size=10&status=1`)
@@ -180,6 +188,7 @@ export default {
                     obj.name = item.title
                     obj.img = item.cover
                     obj.time = `${item.startTime}---${item.startTime}`
+                    obj.status = item.status
                     obj.speakers = item.activitySpeakers.map(item => {
                         let spk = {
                             speakerUserId : item.speakerUserId,

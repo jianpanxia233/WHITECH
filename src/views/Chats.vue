@@ -71,16 +71,18 @@
             >
                 <div v-if="msg.messageType == 'RC:TxtMsg'" class="message-text">
                     <div class="rong-avatar">
-                        <!-- <img
+                        <img
                             v-if="msg.messageDirection == 1"
-                            :src="currentUserInfo.portraitUri"
+                            @click="tomyinfo()"
+                            :src="myportraitUri"
                             class="rong-avatar-bd"
                         >
                         <img
                             v-else
-                            :src="targetUserInfo.portraitUri"
+                            @click="tohisinfo()"
+                            :src="hisportraitUri"
                             class="rong-avatar-bd"
-                        > -->
+                        >
                     </div>
                     <div class="message-body">
                         <pre
@@ -127,6 +129,8 @@ export default {
     return {
       messageHistory: [],
       searchname: "",
+      myportraitUri: localStorage.getItem('avatar'),
+      hisportraitUri: '',
       contacts: [
         {
           name: "",
@@ -160,6 +164,12 @@ export default {
     this.chatInit();
   },
   methods: {
+    tomyinfo(){
+      this.$router.push(`/dashbord`)
+    },
+    tohisinfo(){
+      this.$router.push(`/othersInfo?userId=${this.talker}`)
+    },
     debounceInput() {
       debounce(() => {
         console.log(this.searchname);
@@ -180,6 +190,7 @@ export default {
           let that = this
           this.contacts.forEach(el => {
             if(el.userId==id){
+              this.hisportraitUri = el.portraitUri
               el.unread = 0
             }
           })
@@ -467,9 +478,11 @@ export default {
           height: 35px;
           border-radius: 25px;
           overflow: hidden;
+          cursor:pointer
       }
 
       .message-text .rong-avatar img {
+          height: 100%;
           width: 100%;
       }
 

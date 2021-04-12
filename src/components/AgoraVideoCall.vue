@@ -172,6 +172,9 @@ export default {
     screenshare(){
       if(this.screenorcamera==1){
           this.removeStream(this.uid)
+          this.client.unpublish(this.localStream,err => {
+            console.log('这是错误',err)
+          })
           let screenstream = AgoraRTC.createStream({
             streamID: this.uid,
             audio: true,
@@ -198,6 +201,9 @@ export default {
       } else if(this.screenorcamera ==2) {
         let $ = this
         $.removeStream($.uid)
+        $.client.unpublish($.localStream,err => {
+          console.log('这是错误',err)
+        })
         $.localStream = $.streamInit($.uid, $.attendeeMode, $.videoProfile);
         $.localStream.init(
           () => {
@@ -221,6 +227,7 @@ export default {
       this.streamList.map((item, index) => {
         if (item.getId() === uid) {
           item.close();
+          item.stop()
           let element = document.querySelector("#ag-item-" + uid);
           if (element) {
             element.parentNode.removeChild(element);
@@ -327,11 +334,10 @@ export default {
   },
 
   created() {
-    console.log('///////////////')
     let $ = this;
-    let token = this.publisherToken;
+    let token = $.publisherToken;
+    console.log('//////////')
     console.log(token)
-    console.log(this.channel)
     // init AgoraRTC local client
     $.client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
     $.client.init($.appId, () => {
