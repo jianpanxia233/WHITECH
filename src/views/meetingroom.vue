@@ -18,6 +18,7 @@
           :attendeeMode="attendeeMode"
           :baseMode="baseMode"
           :publisherToken="publisherToken"
+          :isSpeaker ="isSpeaker"
           :appId="appId"
           @child-say="listen"
           :uid="uid"></AgoraVideoCall>
@@ -98,6 +99,7 @@ export default {
       baseMode: Cookies.get("baseMode") || "avc",
       uid: localStorage.getItem('userId'),
       publisherToken: Cookies.get("publisherToken"),
+      isSpeaker: Cookies.get("isSpeaker"),
       im : {},
       chatRoom: {},
       messageHistory: [],
@@ -164,6 +166,12 @@ export default {
       Cookies.set('channel',agendaId)
       if(status=='join'){
         Cookies.set('publisherToken',result.agoraToken)
+        Cookies.set('isSpeaker',result.isSpeaker)
+        if(result.isSpeaker){
+          Cookies.set("attendeeMode",'video')
+        } else if(!result.isSpeaker) {
+          Cookies.set("attendeeMode",'audience')
+        }
       } else if(status=='preview'){
         Cookies.set('publisherToken',result.publisherToken)
       }

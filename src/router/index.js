@@ -93,8 +93,8 @@ const routes = [
     }
 ]
 const router = new VueRouter({
-    mode: 'history',
-    base: process.env.VUE_APP_PUBLIC_PATH || '/',
+    mode: 'hash',
+    base: process.env.BASE_URL || '/',
     routes,
 });
 router.beforeEach(AuthGuard)

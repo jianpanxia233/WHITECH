@@ -2,7 +2,7 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-    publicPath: '/',
+    publicPath: './',
     lintOnSave: false,
     devServer: {
       port: 3000,
@@ -21,5 +21,6 @@ module.exports = {
                 `,
               },
           }
-    }
+    },
+    productionSourceMap: false,
 }

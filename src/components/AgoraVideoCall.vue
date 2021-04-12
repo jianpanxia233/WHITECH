@@ -1,6 +1,6 @@
 <template>
   <div id="ag-canvas">
-    <div class="ag-btn-group">
+    <div class="ag-btn-group" v-show="isSpeaker">
       <span 
         @click="handleExit"
         class="ag-btn exitBtn"
@@ -101,7 +101,8 @@ export default {
     "baseMode",
     "appId",
     "uid",
-    "publisherToken"
+    "publisherToken",
+    "isSpeaker"
   ],
 
   methods: {
@@ -125,7 +126,7 @@ export default {
         case "video":
           break;
       }
-
+      
       let stream = AgoraRTC.createStream(merge(defaultConfig, config));
       stream.setVideoProfile(videoProfile);
       console.log('创建视频流')
