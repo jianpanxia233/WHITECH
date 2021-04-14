@@ -112,9 +112,6 @@ export default {
         console.log('退出聊天室成功');
       });
     },
-    join(){
-      this.chatroominit()
-    },
     chatroominit() {
       this.chatRoom = this.im.ChatRoom.get({
         id: Cookies.get('channel')
@@ -128,11 +125,11 @@ export default {
         timestrap: +new Date(),
         count: 20
       };
-      // this.chatRoom.getMessages(option).then((result)=>{
-      //   this.messageHistory = result.list; // 历史消息列表
-      //   var hasMore = result.hasMore; // 是否还有历史消息可以获取
-      //   console.log('获取聊天室历史消息成功', result.list, hasMore);
-      // });
+      this.chatRoom.getMessages(option).then((result)=>{
+        this.messageHistory = result.list; // 历史消息列表
+        var hasMore = result.hasMore; // 是否还有历史消息可以获取
+        console.log('获取聊天室历史消息成功', result.list, hasMore);
+      });
     },
     sendMessage(){
       this.chatRoom.send({
@@ -158,24 +155,30 @@ export default {
   },
   created() {
     this.appId = AGORA_APP_ID
-  },
-  mounted() {
     let agendaId = this.$route.query.agendaId
     let status = this.$route.query.status
     this.$http.post(`/user/activity/agenda/${status}/${agendaId}`).then(result => {
+      this.channel = agendaId
       Cookies.set('channel',agendaId)
       if(status=='join'){
+        this.publisherToken = result.agoraToken
+        this.isSpeaker = result.isSpeaker
         Cookies.set('publisherToken',result.agoraToken)
         Cookies.set('isSpeaker',result.isSpeaker)
         if(result.isSpeaker){
+          this.attendeeMode = 'video'
           Cookies.set("attendeeMode",'video')
         } else if(!result.isSpeaker) {
+          this.attendeeMode = 'audience'
           Cookies.set("attendeeMode",'audience')
         }
       } else if(status=='preview'){
+        this.publisherToken = result.publisherToken
         Cookies.set('publisherToken',result.publisherToken)
       }
     })
+  },
+  mounted() {
     var callbacks = {
         Received: (message)=>{
           this.messageHistory.push(message)

@@ -1,6 +1,6 @@
 <template>
   <div id="ag-canvas">
-    <div class="ag-btn-group" v-show="isSpeaker">
+    <div class="ag-btn-group">
       <span 
         @click="handleExit"
         class="ag-btn exitBtn"
@@ -337,7 +337,6 @@ export default {
   created() {
     let $ = this;
     let token = $.publisherToken;
-    console.log('//////////')
     console.log(token)
     // init AgoraRTC local client
     $.client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
@@ -397,6 +396,8 @@ export default {
         $.displayMode = "tile";
         return;
       }
+      console.log('触发')
+      console.log($.streamList)
       $.streamList.map((item, index) => {
         let id = item.getId();
         let dom = document.querySelector("#ag-item-" + id);
@@ -416,7 +417,6 @@ export default {
           z-index:1;width:calc(100% - 20px);height:calc(100% - 20px)`
           );
         }
-        item.player.resize && item.player.resize();
       });
     } else if ($.displayMode === "tile") {
       // tile mode

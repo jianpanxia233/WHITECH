@@ -2,10 +2,16 @@
     <div id="homepage">
         <div id="PaginationOno">
             <div class="hostEvents">
-                <el-container>
-                <el-header class="title">标题</el-header>
-                <el-main class="main">这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明,这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明这里是服务的说明，这里是服务的说明，这里是服务的说明，这里是服务的说明</el-main>
-                </el-container>
+                <div class="el-container">
+                <div class="title">
+                    <div class="img">
+                        <img :src="require(`@/assets/title.png`)" alt="title">
+                    </div>
+                </div>
+                <div class="main">
+                    Whitech是一个在线活动平台，您可以在其中创建、参与有趣的在线活动，与全球的朋友进行互动
+                </div>
+                </div>
                 <div>
                     <el-button type="primary" @click="hostEvent">举办自己的活动</el-button>
                     <el-button type="danger" @click="goAround">参观现有的活动</el-button>
@@ -25,12 +31,12 @@
                         <el-header>
                             <p>{{item.title}}</p>
                         </el-header>
-                        <el-main>
-                            <div>
+                        <el-main style="overflow:visible">
+                            <div class="img">
                               <img :src="item.icon" :alt="item.title">
                             </div>
-                            <p style="font-size: 16px;line-height:25px">{{item.main}}</p>
                         </el-main>
+                        <p style="font-size: 16px;line-height:25px">{{item.main}}</p>
                     </el-container>
                 </el-main>
                 <el-footer>
@@ -127,6 +133,12 @@ export default {
             let route = id === 2 ? 'joinus' : 'aboutus'
             this.$router.push(`/${route}`)
         }
+    },
+    mounted(){
+        if(Cookies.get(initstatus) == 'unfinish'){
+            this.$message.warning('请初始化信息');
+            this.$router.push('/admininfo')
+        }
     }
 }
 </script>
@@ -146,15 +158,29 @@ export default {
         div {
             display: flex;
         }
+        .el-container {
+            display: flex;
+            flex-direction: column;
+        }
         .title {
             font-size: 40px;
             font-weight: bold;
             color: #fff;
+            .img {
+                width: 350px;
+                height: 250px;
+                img {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
         }
         .main {
+            margin-top: 20px;
             max-width: 500px;
             height: 250px;
-            font-size: 14px;
+            font-size: 18px;
+            line-height: 30px;
             color: #fff;
         }
     }
@@ -207,18 +233,17 @@ export default {
                 text-align: center;
                 padding: 0 30px;
             }
-            div{
+            .el-main{
                 display: flex;
-                width: 100%;
-                height: auto;
                 justify-content: center;
-            }
-            .img {
+                margin-bottom: 30px;
+                .img {
                 width: 150px;
                 height: 150px;
-                img {
+                    img {
                     width: 100%;
                     height: 100%;
+                    }
                 }
             }
         }

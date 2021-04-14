@@ -10,7 +10,6 @@
   "dependencies": {
     "@rongcloud/imlib-v4": "^4.2.6",
     "agora-rtc-sdk": "^3.4.0",
-    "agora-rtc-sdk-ng": "^4.3.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "element-ui": "^2.12.0",

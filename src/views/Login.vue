@@ -15,7 +15,11 @@
               lavel-position="left"
               >
               <el-form-item prop="mobile">
-                <el-input v-model="loginUserInfo.mobile" placeholder="请输入手机号"></el-input>
+                <div class="mobiletext">
+                  <el-input v-model="loginUserInfo.mobile" placeholder="请输入手机号"></el-input>
+                  <el-button slot="append" v-show="showTime" @click="sendtext()">发送验证码</el-button>
+                  <el-button slot="append" v-show="!showTime" >{{sendTime}}秒</el-button>
+                </div>
               </el-form-item>
               <el-form-item prop="code">
                 <el-input v-model="loginUserInfo.code" placeholder="请输入验证码"></el-input>
@@ -64,12 +68,35 @@ export default {
             {required: true, message: '请输入验证码', trigger: 'blur'}
           ]
         },
-        loading: false
+        loading: false,
+        showTime: true, /* 布尔值，通过v-show控制显示‘获取按钮’还是‘倒计时’ */
+        sendTime: '', /* 倒计时 计数器 */
+        timer: null,
       }
     },
     methods: {
       handleClick(tab,event){
         console.log(tab,event)
+      },
+      sendtext() {
+          const TIME_COUNT = 60; //  更改倒计时时间
+          if (!this.timer) {
+            this.sendTime = TIME_COUNT;
+            this.showTime = false
+            this.timer = setInterval(() => {
+              if(this.sendTime == 60){
+                this.$http.get(`/sms/login/${this.loginUserInfo.mobile}`)
+                this.sendTime--
+              }
+              else if (this.sendTime > 0 && this.sendTime < TIME_COUNT) {
+                this.sendTime--; 
+              } else {
+                this.showTime = true;
+                clearInterval(this.timer); // 清除定时器
+                this.timer = null;
+              }
+            }, 1000);
+          }
       },
       handleLogin(){
         this.loading = true
@@ -82,11 +109,12 @@ export default {
                 });
                 Cookies.set('IM_TOKEN',result.imToken)
                 this.loading = false
+                if(result.initStatus !== '2'){
+                  Cookies.set(initstatus,'unfinish')
+                }
                 let preroute = localStorage.getItem('preRoute')
                 this.$router.push(preroute=='/login'?'/home' : preroute)
-              } else {
-                this.loading = false
-              }
+                } 
             })
       }
     }
@@ -98,6 +126,10 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    .mobiletext {
+      display: flex;
+      justify-content: space-around;
+    }
     .logincontainer {
       height: auto;
       width: auto;

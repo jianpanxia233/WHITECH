@@ -1,7 +1,7 @@
 import request from '@/plugins/request';
 import Cookies from 'js-cookie';
 
-const whiteRouter = ['/','/login','/home','/activity']
+const whiteRouter = ['/','/login','/home','/activity','/joinus','/aboutus']
 export async function AuthGuard(to,from,next) {
     const token = Cookies.get(process.env.VUE_APP_COOKIE_KEY)||'undefined';
     if(token&&token!=='undefined') {
