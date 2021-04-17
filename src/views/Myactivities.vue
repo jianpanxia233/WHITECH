@@ -32,7 +32,7 @@
                 @click="loadMore"
                 >加载更多</el-button>
             </div>
-            <div class="el-header" style="background-color:#090723">
+            <div class="el-header" style="background-image:linear-gradient(#090723,#090723)">
                 <p>我举办的活动</p>
             </div>
             <!-- <hr/> -->
@@ -234,10 +234,11 @@ export default {
 	}
     .el-main {
         width: 100%;
+        min-height: 50%;
         display: flex;
         justify-content: space-around;
         flex-flow: row wrap;
-        background-image: linear-gradient(#090723,#202564);
+        background-color: #202564;
         // background-color:rgb(247, 243, 243);
         .itembox {
             background: #fff;

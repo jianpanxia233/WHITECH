@@ -3,7 +3,7 @@
         <div id="ActOno">
             <div class="view">
                 <div :class="{banner:true,trans:flag}"  @mouseenter="enter" @mouseleave="leave">
-                    <img :src="(imagesUrl[imgindex]['img'])" alt="" class="img">
+                    <img :src="imagesUrl[imgindex].img" :alt="imgindex" class="img">
                 </div>
                 <ul >  
                     <li v-for='(item,index) in 3'
@@ -88,7 +88,7 @@ export default {
             activities: [
                 {
                     name: `颜色与时尚`,
-                    img: require(`@/assets/activity_3.png`),
+                    img: `https://image.whitech.club/static/9b8bad19c41728f3ae4bcc3c7604e31f.png`,
                     time: `2021年2月1日，星期一-2021年12月5日，星期日`,
                     speakers: [
                         {
@@ -103,7 +103,7 @@ export default {
                 },
                 {
                     name: `小型企业成长与管理`,
-                    img: require(`@/assets/activity_2.png`),
+                    img: `https://image.whitech.club/static/41b803381036b7f3caec4495dbe2baf4.png`,
                     time: `2021年3月21日，星期日-2021年3月22日，星期一`,
                     speakers: [
                         {
@@ -118,7 +118,7 @@ export default {
                 },
                 {
                     name: `按键与频率`,
-                    img: require(`@/assets/activity_1.png`),
+                    img: `https://image.whitech.club/static/41e3aa19dd352c35693da52eb770611e.png`,
                     time: `2021年3月23日，星期二，2：00 PM-4:30 PM`,
                     speakers: [
                         {
@@ -183,7 +183,9 @@ export default {
                 }
                 this.currentpage = this.currentpage + 1
             }
-        )
+        ).catch(err => {
+            console.log(err)
+        })
         },
         loadMore(){
             this.loadstate = true

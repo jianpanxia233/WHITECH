@@ -3,14 +3,14 @@
         <div id="PaginationOno">
             <div class="hostEvents">
                 <div class="el-container">
-                <div class="title">
-                    <div class="img">
-                        <img :src="require(`@/assets/title.png`)" alt="title">
+                    <div class="title">
+                        <div class="img">
+                            <img :src="require(`@/assets/title.png`)" alt="title">
+                        </div>
                     </div>
-                </div>
-                <div class="main">
-                    Whitech是一个在线活动平台，您可以在其中创建、参与有趣的在线活动，与全球的朋友进行互动
-                </div>
+                    <div class="main">
+                        Whitech是一个在线活动平台，您可以在其中创建、参与有趣的在线活动，与全球的朋友进行互动
+                    </div>
                 </div>
                 <div>
                     <el-button type="primary" @click="hostEvent">举办自己的活动</el-button>
@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="description">
-                <img :src="require(`@/assets/socialnet.jpg`)" alt="pic2"/>
+                <img :src="`https://image.whitech.club/static/0404839b47beb7db53ece6f3dc583200.jpeg`" alt="pic2"/>
             </div>
         </div>
         <div id="PaginationTwo">
@@ -36,7 +36,7 @@
                               <img :src="item.icon" :alt="item.title">
                             </div>
                         </el-main>
-                        <p style="font-size: 16px;line-height:25px">{{item.main}}</p>
+                        <p style="font-size: 16px;line-height:45px">{{item.main}}</p>
                     </el-container>
                 </el-main>
                 <el-footer>
@@ -82,19 +82,19 @@ export default {
                     id: 1,
                     icon: require(`@/assets/wine.png`),
                     title: `聚会`,
-                    main: `易于举办社交活动和团队社交活动。1对1聊天或以小组形式聊天，每个人都可以看到和听到。`
+                    main: `易于举办社交活动`
                 },
                 {
                     id: 2,
                     icon: require(`@/assets/talks.png`),
-                    title: `会谈`,
-                    main:  `使用互动功能来添加您激动人心的时刻，以组织您的社区想要参加的活动。`
+                    title: `演讲`,
+                    main:  `使用互动功能展示自己`
                 },
                 {
                     id: 3,
                     icon: require(`@/assets/ticket.png`),
-                    title: `专题会议`,
-                    main: `利用高级工具创建多节或多轨活动，以吸引您的与会者和赞助商。`
+                    title: `会议`,
+                    main: `创建多模块会议吸引参与者和赞助商`
                 }
             ],
             Cases: [
@@ -135,9 +135,13 @@ export default {
         }
     },
     mounted(){
-        if(Cookies.get(initstatus) == 'unfinish'){
-            this.$message.warning('请初始化信息');
-            this.$router.push('/admininfo')
+        try{
+            if(Cookies.get(initstatus) == 'unfinish'){
+                this.$message.warning('请初始化信息');
+                this.$router.push('/admininfo')
+            }
+        } catch {
+            console.log('no need init')
         }
     }
 }
@@ -167,8 +171,8 @@ export default {
             font-weight: bold;
             color: #fff;
             .img {
-                width: 350px;
-                height: 250px;
+                width: 250px;
+                height: 200px;
                 img {
                     width: 100%;
                     height: 100%;
@@ -178,7 +182,7 @@ export default {
         .main {
             margin-top: 20px;
             max-width: 500px;
-            height: 250px;
+            height: 120px;
             font-size: 18px;
             line-height: 30px;
             color: #fff;

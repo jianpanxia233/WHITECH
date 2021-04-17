@@ -110,7 +110,7 @@ export default {
                 Cookies.set('IM_TOKEN',result.imToken)
                 this.loading = false
                 if(result.initStatus !== '2'){
-                  Cookies.set(initstatus,'unfinish')
+                  Cookies.set('initstatus','unfinish')
                 }
                 let preroute = localStorage.getItem('preRoute')
                 this.$router.push(preroute=='/login'?'/home' : preroute)
